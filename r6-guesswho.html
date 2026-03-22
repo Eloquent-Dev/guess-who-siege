@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R6S Guess Who?</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        h1 { color: #ff4a4a; margin-bottom: 5px; }
+        p.subtitle { color: #aaaaaa; margin-bottom: 25px; }
+
+        /* --- New Siege-Style Tabs --- */
+        .role-tabs {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            width: 95%;
+            max-width: 1800px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 2px;
+        }
+
+        .tab-btn:hover {
+            color: #ddd;
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            border-bottom: 3px solid #ff4a4a;
+        }
+
+        /* Utility button below tabs */
+        .reset-container {
+            margin-bottom: 30px;
+        }
+
+        .reset-btn {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .reset-btn:hover { background-color: #ff4a4a; border-color: #ff4a4a; }
+
+        /* The Grid Layout - Strictly 10 Columns */
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 15px;
+            width: 95%;
+            max-width: 1800px;
+        }
+
+        /* Individual Operator Cards */
+        .operator-card {
+            background-color: #1a1a1a;
+            border: 2px solid #444;
+            padding: 0;
+            overflow: hidden; 
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .operator-card:hover {
+            border-color: #ff4a4a;
+            transform: scale(1.07);
+            box-shadow: 0 4px 12px rgba(255, 74, 74, 0.2);
+        }
+
+        /* Image Container */
+        .image-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background-color: #1a1a1a;
+        }
+
+        .image-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .op-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .op-badge {
+            position: absolute;
+            bottom: 10px; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65px; 
+            height: 65px;
+            object-fit: contain;
+            z-index: 2; 
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); 
+        }
+
+        /* Simplified Text Container */
+        .op-info {
+            padding: 12px 5px;
+            background-color: #222;
+            border-top: 2px solid #333;
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .op-name {
+            font-size: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        /* State Classes */
+        .eliminated {
+            opacity: 0.25;
+            filter: grayscale(100%);
+            border-color: #111;
+            transform: scale(0.95);
+        }
+
+        .eliminated:hover {
+            border-color: #111;
+            transform: scale(0.95);
+            box-shadow: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .secret-op-section {
+            width: 95%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+            border: 2px solid #ff4a4a;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        .secret-op-title {
+            color: #ff4a4a;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .secret-btn {
+            background-color: #ff4a4a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .secret-btn:hover { background-color: #d13838; }
+
+        .secret-op-display {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background-color: #121212;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+        }
+
+        /* Mini-card for the secret operator */
+        .secret-image-container {
+            position: relative;
+            width: 100px;
+            aspect-ratio: 3 / 4;
+            background-color: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #444;
+        }
+
+        .secret-image-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            pointer-events: none;
+        }
+
+        .secret-op-badge {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            z-index: 2;
+        }
+
+        .secret-op-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .secret-op-name {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #ffffff;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        .secret-op-role {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .toggle-btn {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .toggle-btn:hover { background-color: #666; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h1>R6S Guess Who?</h1>
+    <p class="subtitle">Ask questions, deduce the operator, click to eliminate.</p>
+
+    <div class="secret-op-section" id="secretOpSection">
+        <div class="secret-op-title">Your Target</div>
+        
+        <div id="secretOpPicker">
+            <button class="secret-btn" onclick="pickRandomSecretOp()">Assign Secret Operator</button>
+        </div>
+
+        <div id="secretOpDisplay" class="secret-op-display hidden">
+            <div class="secret-image-container">
+                <img src="" alt="" class="op-image" id="secretOpImage">
+                <img src="" alt="" class="secret-op-badge" id="secretOpBadge">
+            </div>
+            <div class="secret-op-details">
+                <div class="secret-op-name" id="secretOpName"></div>
+                <div class="secret-op-role" id="secretOpRole"></div>
+                <button class="toggle-btn" onclick="hideSecretOp()">Hide Details</button>
+            </div>
+        </div>
+
+        <div id="secretOpHidden" class="secret-op-display hidden" style="flex-direction: column; text-align: center;">
+            <div style="color: #4CAF50; font-weight: bold; margin-bottom: 10px;">Operator Locked In!</div>
+            <button class="toggle-btn" onclick="revealSecretOp()">Reveal to Me Only</button>
+        </div>
+    </div>
+
+    <div class="reset-container">
+        <button class="reset-btn" onclick="resetBoard()">Reset</button>
+    </div>
+
+    <div class="role-tabs">
+        <button class="tab-btn active" id="tab-attacker" onclick="switchTab('Attacker')">Attackers</button>
+        <button class="tab-btn" id="tab-defender" onclick="switchTab('Defender')">Defenders</button>
+    </div>
+
+    <div class="roster-grid" id="roster">
+        </div>
+
+    <script>
+        // Simplified Data - Just Name and Role!
+        const operators = [
+            // --- ATTACKERS ---
+            // Pathfinders
+            { name: "Sledge", role: "Attacker" }, { name: "Thatcher", role: "Attacker" },
+            { name: "Ash", role: "Attacker" }, { name: "Thermite", role: "Attacker" },
+            { name: "Twitch", role: "Attacker" }, { name: "Montagne", role: "Attacker" },
+            { name: "Glaz", role: "Attacker" }, { name: "Fuze", role: "Attacker" },
+            { name: "Blitz", role: "Attacker" }, { name: "IQ", role: "Attacker" },
+            // Year 1
+            { name: "Buck", role: "Attacker" }, { name: "Blackbeard", role: "Attacker" },
+            { name: "Capitao", role: "Attacker" }, { name: "Hibana", role: "Attacker" },
+            // Year 2
+            { name: "Jackal", role: "Attacker" }, { name: "Ying", role: "Attacker" },
+            { name: "Zofia", role: "Attacker" }, { name: "Dokkaebi", role: "Attacker" },
+            // Year 3
+            { name: "Lion", role: "Attacker" }, { name: "Finka", role: "Attacker" },
+            { name: "Maverick", role: "Attacker" }, { name: "Nomad", role: "Attacker" },
+            // Year 4
+            { name: "Gridlock", role: "Attacker" }, { name: "Nokk", role: "Attacker" },
+            { name: "Amaru", role: "Attacker" }, { name: "Kali", role: "Attacker" },
+            // Year 5
+            { name: "Iana", role: "Attacker" }, { name: "Ace", role: "Attacker" },
+            { name: "Zero", role: "Attacker" },
+            // Year 6
+            { name: "Flores", role: "Attacker" }, { name: "Osa", role: "Attacker" },
+            // Year 7
+            { name: "Sens", role: "Attacker" }, { name: "Grim", role: "Attacker" },
+            // Year 8
+            { name: "Brava", role: "Attacker" }, { name: "Ram", role: "Attacker" },
+            // Year 9
+            { name: "Deimos", role: "Attacker" },
+            // Year 10
+            { name: "Rauora", role: "Attacker" },
+            // Year 11
+            { name: "Solid Snake", role: "Attacker" },
+
+            // --- DEFENDERS ---
+            // Pathfinders
+            { name: "Smoke", role: "Defender" }, { name: "Mute", role: "Defender" },
+            { name: "Castle", role: "Defender" }, { name: "Pulse", role: "Defender" },
+            { name: "Doc", role: "Defender" }, { name: "Rook", role: "Defender" },
+            { name: "Kapkan", role: "Defender" }, { name: "Tachanka", role: "Defender" },
+            { name: "Jäger", role: "Defender" }, { name: "Bandit", role: "Defender" }, 
+            // Year 1
+            { name: "Frost", role: "Defender" }, { name: "Valkyrie", role: "Defender" },
+            { name: "Caveira", role: "Defender" }, { name: "Echo", role: "Defender" },
+            // Year 2
+            { name: "Mira", role: "Defender" }, { name: "Lesion", role: "Defender" },
+            { name: "Ela", role: "Defender" }, { name: "Vigil", role: "Defender" },
+            // Year 3
+            { name: "Maestro", role: "Defender" }, { name: "Alibi", role: "Defender" },
+            { name: "Clash", role: "Defender" }, { name: "Kaid", role: "Defender" },
+            // Year 4
+            { name: "Mozzie", role: "Defender" }, { name: "Warden", role: "Defender" },
+            { name: "Goyo", role: "Defender" }, { name: "Wamai", role: "Defender" },
+            // Year 5
+            { name: "Oryx", role: "Defender" }, { name: "Melusi", role: "Defender" },
+            { name: "Aruni", role: "Defender" },
+            // Year 6
+            { name: "Thunderbird", role: "Defender" }, { name: "Thorn", role: "Defender" },
+            // Year 7
+            { name: "Azami", role: "Defender" }, { name: "Solis", role: "Defender" },
+            // Year 8
+            { name: "Fenrir", role: "Defender" }, { name: "Tubarao", role: "Defender" },
+            // Year 9
+            { name: "Skopos", role: "Defender" },
+            // Year 10
+            { name: "Denari", role: "Defender" }
+        ];
+
+        function initializeBoard() {
+            const rosterContainer = document.getElementById('roster');
+            rosterContainer.innerHTML = ''; 
+            
+            operators.forEach(op => {
+                const card = document.createElement('div');
+                card.className = 'operator-card';
+                
+                // Hide Defenders by default
+                if(op.role === 'Defender') {
+                    card.classList.add('hidden');
+                }
+                
+                // Store the role for the tab switching logic
+                card.dataset.role = op.role;
+
+                card.addEventListener('click', () => {
+                    card.classList.toggle('eliminated');
+                });
+
+                const baseName = op.name.toLowerCase();
+
+                card.innerHTML = `
+                    <div class="image-container">
+                        <img src="./assets/images/${baseName}.avif" 
+                             alt="${op.name}" 
+                             class="op-image"
+                             onerror="this.onerror=null; this.src='./assets/images/${baseName}.png';">
+                             
+                        <img src="./assets/badges/${baseName}.avif" 
+                             alt="${op.name} Badge" 
+                             class="op-badge"
+                             onerror="this.onerror=null; this.src='./assets/badges/${baseName}.png';">
+                    </div>
+                    <div class="op-info">
+                        <div class="op-name">${op.name}</div>
+                    </div>
+                `;
+
+                rosterContainer.appendChild(card);
+            });
+        }
+
+        // Tab Switching Logic
+        function switchTab(role) {
+            // Update Tab Button Styles
+            document.getElementById('tab-attacker').classList.remove('active');
+            document.getElementById('tab-defender').classList.remove('active');
+            
+            if (role === 'Attacker') {
+                document.getElementById('tab-attacker').classList.add('active');
+            } else {
+                document.getElementById('tab-defender').classList.add('active');
+            }
+
+            // Show/Hide Cards based on the selected role
+            const cards = document.querySelectorAll('.operator-card');
+            cards.forEach(card => {
+                if (card.dataset.role === role) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        // Reset Board removes eliminated state from ALL cards, even hidden ones
+        function resetBoard() {
+            // 1. Un-flip all the cards on the main grid
+            const cards = document.querySelectorAll('.operator-card');
+            cards.forEach(card => card.classList.remove('eliminated'));
+
+            // 2. Clear the Secret Operator memory
+            secretOp = null;
+
+            // 3. Reset the Secret Operator UI panels back to default
+            document.getElementById('secretOpPicker').classList.remove('hidden');
+            document.getElementById('secretOpDisplay').classList.add('hidden');
+            document.getElementById('secretOpHidden').classList.add('hidden');
+        }
+
+        let secretOp = null;
+
+        function pickRandomSecretOp() {
+            // Select a random operator from the array
+            secretOp = operators[Math.floor(Math.random() * operators.length)];
+            const baseName = secretOp.name.toLowerCase();
+
+            // Setup Portrait Image with fallback
+            const imgEl = document.getElementById('secretOpImage');
+            imgEl.src = `./assets/images/${baseName}.avif`;
+            imgEl.onerror = function() { this.onerror=null; this.src=`./assets/images/${baseName}.png`; };
+            imgEl.alt = secretOp.name;
+
+            // Setup Badge Image with fallback
+            const badgeEl = document.getElementById('secretOpBadge');
+            badgeEl.src = `./assets/badges/${baseName}.avif`;
+            badgeEl.onerror = function() { this.onerror=null; this.src=`./assets/badges/${baseName}.png`; };
+            badgeEl.alt = secretOp.name + " Badge";
+
+            // Set Text
+            document.getElementById('secretOpName').textContent = secretOp.name;
+            document.getElementById('secretOpRole').textContent = secretOp.role;
+
+            // Change UI State to revealed
+            document.getElementById('secretOpPicker').classList.add('hidden');
+            revealSecretOp();
+        }
+
+        function hideSecretOp() {
+            document.getElementById('secretOpDisplay').classList.add('hidden');
+            document.getElementById('secretOpHidden').classList.remove('hidden');
+        }
+
+        function revealSecretOp() {
+            document.getElementById('secretOpDisplay').classList.remove('hidden');
+            document.getElementById('secretOpHidden').classList.add('hidden');
+        }
+
+        // Build the Board
+        initializeBoard();
+    </script>
+</body>
+</html>
