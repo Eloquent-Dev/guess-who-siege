@@ -56,7 +56,8 @@
 
         /* Utility button below tabs */
         .reset-container {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            margin-top:30px;
         }
 
         .reset-btn {
@@ -255,8 +256,8 @@
             bottom: 5px;
             left: 50%;
             transform: translateX(-50%);
-            width: 35px;
-            height: 35px;
+            width: 45px;
+            height: 45px;
             object-fit: contain;
             z-index: 2;
         }
@@ -306,10 +307,10 @@
     <p class="subtitle">Ask questions, deduce the operator, click to eliminate.</p>
 
     <div class="secret-op-section" id="secretOpSection">
-        <div class="secret-op-title">Your Target</div>
+        <div class="secret-op-title">Enemy's Target</div>
         
         <div id="secretOpPicker">
-            <button class="secret-btn" onclick="pickRandomSecretOp()">Assign Secret Operator</button>
+            <button class="secret-btn" onclick="pickRandomSecretOp()">Random Operator</button>
         </div>
 
         <div id="secretOpDisplay" class="secret-op-display hidden">
@@ -328,11 +329,12 @@
             <div style="color: #4CAF50; font-weight: bold; margin-bottom: 10px;">Operator Locked In!</div>
             <button class="toggle-btn" onclick="revealSecretOp()">Reveal to Me Only</button>
         </div>
+
+        <div class="reset-container">
+            <button class="reset-btn" onclick="resetBoard()">Reset</button>
+        </div>
     </div>
 
-    <div class="reset-container">
-        <button class="reset-btn" onclick="resetBoard()">Reset</button>
-    </div>
 
     <div class="role-tabs">
         <button class="tab-btn active" id="tab-attacker" onclick="switchTab('Attacker')">Attackers</button>
@@ -411,7 +413,9 @@
             // Year 9
             { name: "Skopos", role: "Defender" },
             // Year 10
-            { name: "Denari", role: "Defender" }
+            { name: "Denari", role: "Defender" },
+            // Year 11
+            {name: "Noor", role:"Defender"}
         ];
 
         function initializeBoard() {
